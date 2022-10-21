@@ -6,7 +6,7 @@ import argparse
 
 def parse_args():
 
-    parser = argparse.ArgumentParser("Visualize Embeddings script")
+    parser = argparse.ArgumentParser("Prepare embeddings data for doing UMAP")
 
     parser.add_argument("--model",
                         type=str,

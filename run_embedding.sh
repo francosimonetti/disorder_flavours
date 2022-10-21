@@ -4,7 +4,7 @@
 ## obtain embeddings for a fasta dir or multi fasta file
 
 #python calc_embeddings.py --model halft5 --fastadir /data/franco/datasets/disprot/fasta --outdir disprot
-#python calc_embeddings.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --outdir monomers
+#python calc_embeddings.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --outdir /data/franco/datasets/prot_embedding_weights/monomers
 #python calc_embeddings.py --model esmb1 --fasta /data/franco/datasets/disprot/monomers.fasta --outdir monomers
 
 
@@ -13,8 +13,8 @@
 ## Prepares seq_data, annot_data and embedding data by concatenating sequences, annotations and embedding matrices
 ## Makes sure that the fasta matches dimensions of the annotations and embeddings
 
-#python prepare_plotdata.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --annot /data/franco/datasets/disprot/monomers_annot.fasta --embeddir monomers/halft5/ --outdir ./monomers_plotdata
-#python prepare_plotdata.py --model halft5 --fastadir /data/franco/datasets/disprot/fasta/ --annot /data/franco/datasets/disprot/DisProt_release_2022_06_reformat_annot.fasta --embeddir disprot/halft5/ --outdir ./disprot_plotdata
+#python prepare_plotdata.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --annot /data/franco/datasets/disprot/monomers_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/monomers/halft5/ --outdir ./monomers_plotdata
+#python prepare_plotdata.py --model halft5 --fastadir /data/franco/datasets/disprot/fasta/ --annot /data/franco/datasets/disprot/DisProt_release_2022_06_reformat_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/disprot/halft5/ --outdir ./disprot_plotdata
 
 
 
