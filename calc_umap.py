@@ -24,9 +24,9 @@ def parse_args():
                         help="UMAP min_dist parameter")
 
     parser.add_argument("--outfile",
-                          type=str,
-                          dest="outfile",
-                          help="Destination file of UMAP coordinates")
+                        type=str,
+                        dest="outfile",
+                        help="Destination file of UMAP coordinates")
 
     opts = parser.parse_args()
     return opts
@@ -43,4 +43,7 @@ print(f"Loaded in {e}!")
 my_umap = umap.UMAP(n_neighbors=opts.neighbours, min_dist=opts.mindist)
 umap_embed = my_umap.fit_transform(embeddings)
 
+outdir = os.path.dirname(opts.outfile)
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
 np.savetxt(opts.outfile, umap_embed)

@@ -7,6 +7,7 @@
 #python calc_embeddings.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --outdir /data/franco/datasets/prot_embedding_weights/monomers
 #python calc_embeddings.py --model esmb1 --fasta /data/franco/datasets/disprot/monomers.fasta --outdir monomers
 
+#python calc_embeddings.py --model halft5 --upix 0 --fasta /data/franco/datasets/disprot/disprot_regions_seq.fasta --outdir /data/franco/datasets/prot_embedding_weights/disprot_regions
 
 
 #### 2. Prepare data
@@ -15,7 +16,7 @@
 
 #python prepare_plotdata.py --model halft5 --fasta /data/franco/datasets/disprot/monomers.fasta --annot /data/franco/datasets/disprot/monomers_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/monomers/halft5/ --outdir ./monomers_plotdata
 #python prepare_plotdata.py --model halft5 --fastadir /data/franco/datasets/disprot/fasta/ --annot /data/franco/datasets/disprot/DisProt_release_2022_06_reformat_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/disprot/halft5/ --outdir ./disprot_plotdata
-
+#python prepare_plotdata.py --model halft5 --upix 0 --fasta /data/franco/datasets/disprot/disprot_regions_seq.fasta --annot /data/franco/datasets/disprot/disprot_regions_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/disprot_regions/halft5/ --outdir /data/franco/disorder_flavours/disprot_regions_plotdata
 
 
 #### 3. Calculate UMAP

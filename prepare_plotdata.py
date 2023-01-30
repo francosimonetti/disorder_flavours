@@ -42,6 +42,12 @@ def parse_args():
                         dest="embeddir",
                         help="directory with embedding data (outdir from calc_embeddings.py)")
 
+    parser.add_argument("--upix",
+                          type=int,
+                          default=1,
+                          dest="upix",
+                          help="uniprot id position 0|1|2 ..")
+
     parser.add_argument("--outdir",
                           type=str,
                           dest="outdir",
@@ -77,6 +83,7 @@ def get_sequences(fastadir=None, fastafile=None):
 
 opts = parse_args()
 sel_embedding = opts.model #'halft5'
+upix = opts.upix
 
 if sel_embedding not in avail_models:
     print("ERROR: Selected model not available")
@@ -91,11 +98,12 @@ annots    = get_sequences(fastadir=opts.annotdir, fastafile=opts.annotfile)
 annot_dict = dict()
 for record in annots:
     if "|" in record.name:
-        name = record.name.split("|")[1].strip()
+        name = record.name.split("|")[upix].strip()
     else:
-        name = record.name.split()[0].strip()
+        name = record.name.strip()
         if name == "":
             print("Name is empty",record.name)
+            raise
     # if name != "A0A6L8PPD0":
     #     continue
     annot_dict[name] = str(record.seq)
@@ -106,9 +114,9 @@ disseqs = list()
 
 for s in sequences:
     if "|" in s.name:
-        name = s.name.split("|")[1].strip()
+        name = s.name.split("|")[upix].strip()
     else:
-        name = s.name.split()[0].strip()
+        name = s.name.strip()
         if name == "":
             print("Name is empty",s.name)
             raise

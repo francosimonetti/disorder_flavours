@@ -27,6 +27,12 @@ def parse_args():
                           dest="fastafile",
                           help="Multi fasta file")
 
+    parser.add_argument("--upix",
+                          type=int,
+                          default=1,
+                          dest="upix",
+                          help="uniprot id position 0|1|2 ..")
+
     parser.add_argument("--outdir",
                           type=str,
                           dest="outdir",
@@ -70,11 +76,12 @@ output_dir = os.path.join(opts.outdir, sel_embedding)
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+upix = opts.upix
 for s in sequences:
     if "|" in s.name:
-        name = s.name.split("|")[1].strip()
+        name = s.name.split("|")[upix].strip()
     else:
-        name = s.name.split()[0].strip()
+        name = s.name.strip()
         if name == "":
             print("Name is empty",s.name)
             raise
