@@ -1,6 +1,3 @@
-
-
-
 from tqdm import tqdm
 import random
 import os
@@ -45,6 +42,12 @@ def parse_args():
                           dest="outdir",
                           help="Output directory")
 
+    parser.add_argument("--outattentions",
+                          action='store_true',
+                          dest="output_attentions",
+                          default=False,
+                          help="Output attention matrices")
+
     opts = parser.parse_args()
     return opts
 
@@ -66,6 +69,9 @@ if __name__ == "__main__":
 
 
     opts = parse_args()
+
+    print("Parameters:")
+    print(f"\t- Output attentions: {opts.output_attentions}")
 
     if not os.path.exists(opts.outdir):
         os.makedirs(opts.outdir)
@@ -109,7 +115,7 @@ if __name__ == "__main__":
                         input_ids = torch.tensor(tmp['input_ids']).to(device)
                         attention_mask = torch.tensor(tmp['attention_mask']).to(device)
                         with torch.no_grad():
-                            emb  = fullmodel(input_ids=input_ids, labels=true_tok, output_attentions=True, attention_mask=attention_mask, decoder_attention_mask=attention_mask)
+                            emb  = fullmodel(input_ids=input_ids, labels=true_tok, output_attentions=opts.output_attentions, attention_mask=attention_mask, decoder_attention_mask=attention_mask)
                             loss = emb.loss.cpu()
                             loss_sequence.append(loss.item())
                             cpulogits = emb.logits.cpu()
@@ -139,9 +145,10 @@ if __name__ == "__main__":
             if not os.path.exists(f"logits/{uniprot_id}_logits.pt"):
                 ## Output the complete attention matrices with a full pass, no mask
                 with torch.no_grad():
-                    emb = fullmodel(input_ids=true_tok, labels=true_tok, output_attentions=True, attention_mask=attention_mask, decoder_attention_mask=attention_mask)
-                    torch.save(emb.encoder_attentions, f"attentions/{uniprot_id}_encoder_attentions.pt")
-                    torch.save(emb.decoder_attentions, f"attentions/{uniprot_id}_decoder_attentions.pt")
+                    emb = fullmodel(input_ids=true_tok, labels=true_tok, output_attentions=opts.output_attentions, attention_mask=attention_mask, decoder_attention_mask=attention_mask)
+                    if opts.output_attentions:
+                        torch.save(emb.encoder_attentions, f"attentions/{uniprot_id}_encoder_attentions.pt")
+                        torch.save(emb.decoder_attentions, f"attentions/{uniprot_id}_decoder_attentions.pt")
                     torch.save(emb.logits, f"logits/{uniprot_id}_logits.pt")
             else:
                 print(f"Skipping {uniprot_id} attentions matrices and logits")

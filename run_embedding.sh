@@ -18,6 +18,8 @@
 #python prepare_plotdata.py --model halft5 --fastadir /data/franco/datasets/disprot/fasta/ --annot /data/franco/datasets/disprot/DisProt_release_2022_06_reformat_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/disprot/halft5/ --outdir ./disprot_plotdata
 #python prepare_plotdata.py --model halft5 --upix 0 --fasta /data/franco/datasets/disprot/disprot_regions_seq.fasta --annot /data/franco/datasets/disprot/disprot_regions_annot.fasta --embeddir /data/franco/datasets/prot_embedding_weights/disprot_regions/halft5/ --outdir /data/franco/disorder_flavours/disprot_regions_plotdata
 
+#Compile data for match-mismatch analysis
+python prepare_plotdata.py --model halft5 --fasta disprot_OK_fullset.fasta --annot disprot_OK_fullset_annotations.fasta --embeddir /biodata/franco/datasets/prot_embedding_weights/disprot/halft5 --outdir disprot_plotdata_OK_fullset
 
 #### 3. Calculate UMAP
 ### Don't run just now

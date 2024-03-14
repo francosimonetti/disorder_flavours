@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #SBATCH -p long
 #SBATCH -t 4-00:00:00
 #SBATCH -n 16
