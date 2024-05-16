@@ -5,6 +5,8 @@ from embeddings_config import embedding_data, avail_models
 import numpy as np
 import os
 import argparse
+import torch
+from tqdm import tqdm
 
 def parse_args():
 
@@ -48,6 +50,8 @@ if sel_embedding not in avail_models:
     print("ERROR: Selected model not available")
     raise
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 sequences = []
 # check for a directory with individual fasta files
 # or a multi fasta file
@@ -68,16 +72,16 @@ elif opts.fastafile is not None:
 
 #embedder = ProtTransT5XLU50Embedder(model_directory=embedding_data[sel_embedding]['dir'], half_model=True)
 if sel_embedding == "halft5":
-    embedder = embedding_data[opts.model]["embedder"](model_directory=embedding_data[sel_embedding]['dir'], half_model=True)
+    embedder = embedding_data[opts.model]["embedder"](model_directory=embedding_data[sel_embedding]['dir'], half_model=True, device=device)
 else:
-    embedder = embedding_data[opts.model]["embedder"](model_directory=embedding_data[sel_embedding]['dir'])
+    embedder = embedding_data[opts.model]["embedder"](model_directory=embedding_data[sel_embedding]['dir'], device=device)
 
 output_dir = os.path.join(opts.outdir, sel_embedding)
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 upix = opts.upix
-for s in sequences:
+for s in tqdm(sequences):
     if "|" in s.name:
         name = s.name.split("|")[upix].strip()
     else:
@@ -90,11 +94,11 @@ for s in sequences:
     if len(aa_sequence) > 1200:
         print(f"Skipping {name}, len={len(aa_sequence)}")
         continue
-    outfile = os.path.join(output_dir, name+".gz")
+    outfile = os.path.join(output_dir, name+".npy")
     if os.path.exists(outfile):
         print(f"File exists: {outfile}")
         continue
     else:
         embedding = embedder.embed(aa_sequence)
-        np.savetxt(outfile, embedding)
+        np.save(outfile, embedding)
                                                     
