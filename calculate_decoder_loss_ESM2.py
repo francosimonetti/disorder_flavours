@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     opts = parse_args()
 
-    os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
+    #os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
     print("Parameters:")
     print(f"\t- Output attentions: {opts.output_attentions}")
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # Load model and tokenizer
     model, alphabet = esm.pretrained.esm2_t36_3B_UR50D()
 
-    if device == 'cuda:0':
+    if device.type == 'cuda':
         model = model.eval().cuda()  # disables dropout for deterministic results
         torch.cuda.empty_cache()
     else:
@@ -143,7 +143,9 @@ if __name__ == "__main__":
                     pred_dict[uniprot_id][f"aamask_{mask_size}"] = dict()
                     pred_dict[uniprot_id][f"aamask_{mask_size}"]["match"] = match_sequence
                     pred_dict[uniprot_id][f"aamask_{mask_size}"]["loss"] = loss_sequence
-                    pred_dict[uniprot_id][f"aamask_{mask_size}"]["logits"] = logits_sequence
+                    ### This takes too much time and space, we will save the logits somewhere else
+                    #pred_dict[uniprot_id][f"aamask_{mask_size}"]["logits"] = logits_sequence
+                    np.save(f"{opts.outdir}/logits/{uniprot_id}_logits_sequence.npy",  np.array(logits_sequence, dtype=object), allow_pickle=True)
                 with open(f"{opts.outdir}/{uniprot_id}.json", 'w') as outfmt:
                     json.dump(pred_dict, outfmt)
             else:
@@ -152,12 +154,12 @@ if __name__ == "__main__":
                 ## Output the complete attention matrices with a full pass, no mask
                 with torch.no_grad():
                     #emb = fullmodel(input_ids=true_tok, labels=true_tok, output_attentions=opts.output_attentions, attention_mask=attention_mask, decoder_attention_mask=attention_mask)
-                    if device == 'cuda:0':
-                        if len(aa_sequence) > 600:
-                            results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False)
-                        else:
-                            results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=True)
-                            torch.save(results['contacts'][0].cpu(), f"{opts.outdir}/logits/{uniprot_id}_contacts.pt")
+                    if device.type == 'cuda':
+                        # if len(aa_sequence) > 600:
+                        #     results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False)
+                        # else:
+                        results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False)
+                        # torch.save(results['contacts'][0].cpu(), f"{opts.outdir}/logits/{uniprot_id}_contacts.pt")
                     else:
                         results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=True)
                         torch.save(results['contacts'][0].cpu(), f"{opts.outdir}/logits/{uniprot_id}_contacts.pt")

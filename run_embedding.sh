@@ -11,6 +11,8 @@
 
 python calc_embeddings.py --model halft5 --upix 0 --fasta /biodata/franco/datasets/disprot/all_disprot_seq_and_regions_concat_OK_2023_12.fasta --outdir ./disprot_2023_12_embeddings
 
+python calc_embeddings_ESM2.py --upix 0 --fasta /biodata/franco/datasets/disprot/all_disprot_seq_and_regions_concat_OK_2023_12.fasta --outdir ./disprot_2023_12_embeddings_ESM2
+
 #### 2. Prepare data
 ## Prepares seq_data, annot_data and embedding data by concatenating sequences, annotations and embedding matrices
 ## Makes sure that the fasta matches dimensions of the annotations and embeddings

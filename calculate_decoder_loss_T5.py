@@ -80,6 +80,7 @@ if __name__ == "__main__":
 
     modelpath = "models/prottrans_t5_xl_u50/"
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    print(device)
     fullmodel = T5ForConditionalGeneration.from_pretrained(modelpath).to(device)
     celoss = CrossEntropyLoss()
 
@@ -167,7 +168,9 @@ if __name__ == "__main__":
                     pred_dict[uniprot_id][f"aamask_{mask_size}"] = dict()
                     pred_dict[uniprot_id][f"aamask_{mask_size}"]["match"] = match_sequence
                     pred_dict[uniprot_id][f"aamask_{mask_size}"]["loss"] = loss_sequence
-                    pred_dict[uniprot_id][f"aamask_{mask_size}"]["logits"] = logits_sequence
+                    ### This takes too much time and space, we will save the logits somewhere else
+                    # pred_dict[uniprot_id][f"aamask_{mask_size}"]["logits"] = logits_sequence
+                    np.save(f"{opts.outdir}/logits/{uniprot_id}_logits_sequence.npy",  np.array(logits_sequence, dtype=object), allow_pickle=True)
                 with open(f"{opts.outdir}/{uniprot_id}.json", 'w') as outfmt:
                     json.dump(pred_dict, outfmt)
             else:

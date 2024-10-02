@@ -5,6 +5,9 @@ logits*/
 *.fasta
 AF/
 attentions*/
+*.json
+*.npy
+jupyter/*.npy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
