@@ -9,9 +9,13 @@
 
 #python calc_embeddings.py --model halft5 --upix 0 --fasta /data/franco/datasets/disprot/disprot_regions_seq.fasta --outdir /data/franco/datasets/prot_embedding_weights/disprot_regions
 
+conda activate py39bioembed
 python calc_embeddings.py --model halft5 --upix 0 --fasta /biodata/franco/datasets/disprot/all_disprot_seq_and_regions_concat_OK_2023_12.fasta --outdir ./disprot_2023_12_embeddings
+python calc_embeddings.py --model halft5 --upix 0 --fasta /biodata/franco/zsuzsa_lab/disprot_OK_ss_regions_2023_12.fasta --outdir ./disprot_2023_12_embeddings
 
+conda activate py39
 python calc_embeddings_ESM2.py --upix 0 --fasta /biodata/franco/datasets/disprot/all_disprot_seq_and_regions_concat_OK_2023_12.fasta --outdir ./disprot_2023_12_embeddings_ESM2
+python calc_embeddings_ESM2.py --upix 0 --fasta /biodata/franco/zsuzsa_lab/disprot_OK_ss_regions_2023_12.fasta --outdir ./disprot_2023_12_embeddings_ESM2
 
 #### 2. Prepare data
 ## Prepares seq_data, annot_data and embedding data by concatenating sequences, annotations and embedding matrices

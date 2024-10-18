@@ -124,13 +124,13 @@ if __name__ == "__main__":
                         if opts.autoregressive:
                             with torch.no_grad():
                                 emb = fullmodel.generate(input_ids, max_length=len(input_ids[0])+1, return_dict_in_generate=True, output_scores=True, output_attentions=opts.output_attentions)
-                            cpulogits = torch.stack([s.squeeze() for s in emb.scores], dim=0)[:-1,]
+                            cpulogits = torch.stack([s.squeeze() for s in emb.scores], dim=0)[:-1,].cpu()
                             fastpred = tokenizer.decode(torch.argmax(cpulogits, dim=1), skip_special_tokens=False).replace("<"," <").replace(">","> ")
                             
                             # Calculate protein-level loss from single aminoacid losses
                             acum = 0
                             for j in range(cpulogits.shape[0]):
-                                acum += celoss(cpulogits[j], true_tok.squeeze()[:-1][j])        
+                                acum += celoss(cpulogits[j], true_tok.cpu().squeeze()[:-1][j])        
                             protein_loss  = acum/cpulogits.shape[0]
                             # the proper full protein loss should be the one below, but it will fail if dimentions are not correct
                             # the above expression will be wrong, but aproximate? maybe shifted by one? it will suck, let's set it to -1

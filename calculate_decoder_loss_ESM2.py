@@ -31,6 +31,13 @@ def parse_args():
                           default=1e8,
                           dest="end",
                           help="end at sequence nº")
+    
+    parser.add_argument("--maxlen",
+                          type=int,
+                          default=1e8,
+                          dest="maxlen",
+                          help="maximum sequence length")
+
 
     parser.add_argument("--outdir",
                           type=str,
@@ -42,6 +49,14 @@ def parse_args():
                           dest="output_attentions",
                           default=False,
                           help="Output attention matrices")
+    
+    parser.add_argument("--smallmodel",
+                          action='store_true',
+                          dest="smallmodel",
+                          default=False,
+                          help="Use the smaller model version")
+
+
 
     opts = parser.parse_args()
     return opts
@@ -77,7 +92,10 @@ if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     print(f"\t- Device: {device}")
     # Load model and tokenizer
-    model, alphabet = esm.pretrained.esm2_t36_3B_UR50D()
+    if not opts.smallmodel:
+        model, alphabet = esm.pretrained.esm2_t36_3B_UR50D()
+    else:
+        model, alphabet = esm.pretrained.esm2_t33_650M_UR50D()
 
     if device.type == 'cuda':
         model = model.eval().cuda()  # disables dropout for deterministic results
@@ -91,12 +109,17 @@ if __name__ == "__main__":
     # Read fasta sequences
     counter = 0
     batch_converter = alphabet.get_batch_converter()
+    if opts.output_attentions:
+        need_head_weights = True
+    else:
+        need_head_weights = False
     for record in SeqIO.parse(opts.fastafile, "fasta"):
         #sequences.append(record)
-        if counter >= opts.start and counter < opts.end:
-            uniprot_id = record.id
-            aa_sequence = str(record.seq)
-            
+        uniprot_id = record.id
+        aa_sequence = str(record.seq)
+
+        if counter >= opts.start and counter < opts.end and len(aa_sequence) < opts.maxlen:
+                       
             pred_dict = dict()
             mask_sizes = [1]
             print(f" Processing {uniprot_id}, protnum {counter}")
@@ -113,12 +136,14 @@ if __name__ == "__main__":
                     loss_sequence = list()
                     match_sequence = list()
                     logits_sequence = list()
+                    meanatt_sequence = list()
+                    maxatt_sequence = list()
                     for i in tqdm(range(len(target_seq)-mask_size+1)):
 
                         masked_seq = sequence_masker(input_seq[0], i, i+mask_size)
                         mbatch_labels, mbatch_strs, mbatch_tokens = batch_converter([(uniprot_id, masked_seq)])
                         with torch.no_grad():
-                            results = model(mbatch_tokens.to(device), repr_layers=[36], return_contacts=False)
+                            results = model(mbatch_tokens.to(device), repr_layers=[36], return_contacts=False, need_head_weights=need_head_weights)
                         cpulogits = results['logits'][0].cpu()
                         loss_val = float(loss(cpulogits[1:-1,], mbatch_tokens[0][1:-1]).numpy())  ## recently corrected to discard cls and eos tokens
                         loss_sequence.append(loss_val)
@@ -135,10 +160,17 @@ if __name__ == "__main__":
                                 for j in range(len(pred_arr)):
                                     if pred_arr[j] != seq_arr[j]:
                                         local_match_sequence.append((j,pred_arr[j], seq_arr[j]))
+                                match_sequence.append(local_match_sequence)
                             else:
-                                print("Mismatch length error")
-                                raise
-                            match_sequence.append(local_match_sequence)
+                                print(f"{i} - Mismatch length error")
+                                match_sequence.append(False)
+                                loss_sequence
+                        if opts.output_attentions:
+                            att_cpu = results['attentions'].squeeze().cpu()
+                            fullmax = torch.amax(att_cpu, dim=(0,1))
+                            fullmean = torch.mean(att_cpu, dim=(0,1))
+                            meanatt_sequence.append(fullmean)
+                            maxatt_sequence.append(fullmean)
                             
                     pred_dict[uniprot_id][f"aamask_{mask_size}"] = dict()
                     pred_dict[uniprot_id][f"aamask_{mask_size}"]["match"] = match_sequence
@@ -146,6 +178,9 @@ if __name__ == "__main__":
                     ### This takes too much time and space, we will save the logits somewhere else
                     #pred_dict[uniprot_id][f"aamask_{mask_size}"]["logits"] = logits_sequence
                     np.save(f"{opts.outdir}/logits/{uniprot_id}_logits_sequence.npy",  np.array(logits_sequence, dtype=object), allow_pickle=True)
+                    if opts.output_attentions:
+                        np.save(f"{opts.outdir}/attentions/{uniprot_id}_max_attentions_sequence.npy",  np.array(meanatt_sequence, dtype=object), allow_pickle=True)
+                        np.save(f"{opts.outdir}/attentions/{uniprot_id}_mean_attentions_sequence.npy",  np.array(maxatt_sequence, dtype=object), allow_pickle=True)
                 with open(f"{opts.outdir}/{uniprot_id}.json", 'w') as outfmt:
                     json.dump(pred_dict, outfmt)
             else:
@@ -158,15 +193,19 @@ if __name__ == "__main__":
                         # if len(aa_sequence) > 600:
                         #     results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False)
                         # else:
-                        results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False)
+                        results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=False, need_head_weights=need_head_weights)
                         # torch.save(results['contacts'][0].cpu(), f"{opts.outdir}/logits/{uniprot_id}_contacts.pt")
                     else:
-                        results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=True)
+                        results = model(batch_tokens.to(device), repr_layers=[36], return_contacts=True, need_head_weights=need_head_weights)
                         torch.save(results['contacts'][0].cpu(), f"{opts.outdir}/logits/{uniprot_id}_contacts.pt")
                 cpulogits = results['logits'][0].cpu()[1:-1,]
                 torch.save(cpulogits, f"{opts.outdir}/logits/{uniprot_id}_logits.pt")
                 if opts.output_attentions:
-                    torch.save(results['attentions'][0], f"{opts.outdir}/attentions/{uniprot_id}_encoder_attentions.pt")
+                    att_cpu = results['attentions'].squeeze().cpu()
+                    fullmax = torch.amax(att_cpu, dim=(0,1))
+                    fullmean = torch.mean(att_cpu, dim=(0,1))
+                    torch.save(fullmax, f"{opts.outdir}/attentions/{uniprot_id}_original_max_attentions.pt")
+                    torch.save(fullmean, f"{opts.outdir}/attentions/{uniprot_id}_original_mean_attentions.pt")
             else:
                 print(f"Skipping {uniprot_id} attentions matrices and logits")
         counter += 1
